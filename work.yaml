@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata: 
+  generateName: noor-python-
+spec:
+  entrypoint: main
+  templates:
+  - name: main
+    steps:
+    - - name: step1
+        template: run-python
+        hooks:
+          exit:
+            template: capture-time
+            arguments:
+              parameters:
+              - name: step-name
+                value: 'step1'
+                # valueFrom:
+                #   configMapKeyRef:
+                #     name: step-names-configmap
+                #     key: stepa
+
+    - - name: step2
+        template: run-python
+        hooks:
+          exit:
+            template: capture-time
+            arguments:
+              parameters:
+              - name: step-name
+                value: 'step2'
+                # valueFrom:
+                #   configMapKeyRef:
+                #     name: step-names-configmap
+                #     key: stepb
+
+
+  - name: run-python
+    script:
+      image: docker.io/noor0259/noora1:latest
+      command: ["python", "app.py"]
+
+  - name: capture-time
+    inputs:
+      parameters:
+        - name: step-name
+    script:
+      image: docker.io/noor0259/noora1:latest
+      command: ["/bin/sh","-c"]
+      args: [ "python3 exit-script.py {{workflow.name}} {{inputs.parameters.step-name}}"]
